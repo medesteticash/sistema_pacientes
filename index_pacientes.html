@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SH Estética — Fichas de Pacientes</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pink:#D4537E;--pink-d:#993556;--pink-l:#FBEAF0;--pink-t:#72243E;
+  --teal:#1D9E75;--teal-l:#E1F5EE;--teal-t:#085041;
+  --amber-l:#FAEEDA;--amber-t:#633806;
+  --red-l:#FCEBEB;--red-b:#F09595;--red-t:#791F1F;
+  --green-l:#EAF3DE;--green-t:#27500A;
+  --bg:#F5F4F1;--card:#fff;--border:#E8E7E3;--border2:#D0CFC9;
+  --text:#1A1A1A;--muted:#888;--hint:#BBB;
+  --radius:12px;--radius-sm:8px;--radius-xs:6px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.hidden{display:none!important}
+
+/* ── LOGIN ── */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;width:100%;max-width:380px}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem}
+.login-logo .dot{width:12px;height:12px;border-radius:50%;background:var(--pink)}
+.login-logo span{font-size:16px;font-weight:500}
+.login-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.5rem}
+.login-tab{flex:1;padding:8px;font-size:13px;text-align:center;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;color:var(--muted)}
+.login-tab.on{color:var(--pink);border-bottom-color:var(--pink);font-weight:500}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+.form-group input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;outline:none;transition:border .15s}
+.form-group input:focus{border-color:var(--pink)}
+.form-hint{font-size:11px;color:var(--muted);margin-top:4px}
+.btn-login{width:100%;padding:10px;background:var(--pink);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;margin-top:4px}
+.btn-login:hover{background:var(--pink-d)}
+.login-error{background:var(--red-l);color:var(--red-t);font-size:12px;padding:8px 12px;border-radius:var(--radius-xs);margin-bottom:12px;border:1px solid var(--red-b)}
+
+/* ── LAYOUT ── */
+#app{display:none;min-height:100vh}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 1.25rem;display:flex;align-items:center;height:52px;gap:12px;position:sticky;top:0;z-index:100}
+.topbar-logo{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500}
+.topbar-logo .dot{width:9px;height:9px;border-radius:50%;background:var(--pink)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.user-pill{font-size:12px;color:var(--muted);background:var(--bg);padding:5px 10px;border-radius:20px;border:1px solid var(--border)}
+.btn-logout{font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;padding:4px}
+.btn-logout:hover{color:var(--text)}
+.main{max-width:740px;margin:0 auto;padding:1.25rem}
+
+/* ── PATIENT MODE ── */
+#patient-view .topbar{justify-content:space-between}
+.patient-hero{background:var(--pink);color:#fff;border-radius:var(--radius);padding:1.25rem;margin-bottom:12px}
+.patient-hero-name{font-size:20px;font-weight:500;margin-bottom:2px}
+.patient-hero-sub{font-size:13px;opacity:.8}
+.patient-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.pstat{background:rgba(255,255,255,.15);border-radius:var(--radius-sm);padding:10px;text-align:center}
+.pstat-n{font-size:20px;font-weight:500}
+.pstat-l{font-size:11px;opacity:.8;margin-top:2px}
+
+/* ── SEARCH ── */
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 14px;margin-bottom:12px}
+.search-bar input{border:none;outline:none;font-size:14px;flex:1;background:transparent;color:var(--text)}
+.search-bar input::placeholder{color:var(--hint)}
+.patient-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.patient-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border .15s}
+.patient-item:hover{border-color:var(--pink)}
+.pat-avatar{width:40px;height:40px;border-radius:50%;background:var(--pink-l);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;color:var(--pink-t);flex-shrink:0}
+.pat-name{font-size:14px;font-weight:500}
+.pat-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.pat-badges{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+.pat-right{margin-left:auto;text-align:right;flex-shrink:0}
+.pat-date{font-size:11px;color:var(--muted)}
+.btn-new{width:100%;padding:10px;background:var(--pink);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer}
+.btn-new:hover{background:var(--pink-d)}
+
+/* ── CARD ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem 1.25rem;margin-bottom:10px}
+.card-back{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--pink);cursor:pointer;margin-bottom:14px;background:none;border:none;padding:0}
+.card-back:hover{text-decoration:underline}
+.ficha-header{display:flex;align-items:flex-start;gap:13px;margin-bottom:12px}
+.avatar-lg{width:50px;height:50px;border-radius:50%;background:var(--pink-l);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;color:var(--pink-t);flex-shrink:0}
+.ficha-name{font-size:18px;font-weight:500}
+.ficha-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.ficha-badges{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap}
+.next-turn{text-align:right;flex-shrink:0}
+.next-turn-label{font-size:11px;color:var(--muted)}
+.next-turn-date{font-size:13px;font-weight:500;margin-top:2px}
+.next-turn-time{font-size:11px;color:var(--muted)}
+
+/* ── BADGES ── */
+.badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;display:inline-block}
+.b-pink{background:var(--pink-l);color:var(--pink-t)}
+.b-teal{background:var(--teal-l);color:var(--teal-t)}
+.b-amber{background:var(--amber-l);color:var(--amber-t)}
+.b-green{background:var(--green-l);color:var(--green-t)}
+
+/* ── ALERTA ── */
+.alerta{background:var(--red-l);border:1px solid var(--red-b);border-radius:var(--radius-xs);padding:8px 12px;display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.alerta-dot{width:7px;height:7px;border-radius:50%;background:#E24B4A;flex-shrink:0}
+.alerta span{font-size:12px;color:var(--red-t)}
+
+/* ── TABS ── */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{padding:8px 14px;font-size:12px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none}
+.tab.on{color:var(--pink);border-bottom-color:var(--pink);font-weight:500}
+
+/* ── FIELDS ── */
+.sec{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin:14px 0 8px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:5px 24px}
+.f{padding:5px 0;border-bottom:1px solid var(--border)}
+.fl{font-size:11px;color:var(--hint);margin-bottom:1px}
+.fv{font-size:13px;color:var(--text)}
+.fv.red{color:#A32D2D;font-weight:500}
+
+/* ── SESSIONS ── */
+.ses{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.ses:last-child{border-bottom:none}
+.ses-dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.ses-trat{font-size:13px;font-weight:500}
+.ses-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.ses-note{font-size:11px;color:var(--muted);margin-top:3px;font-style:italic}
+.ses-right{text-align:right;flex-shrink:0}
+.ses-price{font-size:13px;font-weight:500}
+.ses-margin{font-size:11px;color:var(--teal)}
+
+/* ── FOTOS ── */
+.fotos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.fbox{aspect-ratio:1;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.fbox.add{cursor:pointer;border-style:dashed}
+.fbox.add:hover{background:#f0f0ee}
+.ftag{position:absolute;bottom:5px;left:5px;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600}
+
+/* ── NOTAS ── */
+.nota{background:var(--bg);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px}
+.nota-d{font-size:11px;color:var(--hint);margin-bottom:3px}
+.nota-t{font-size:13px;line-height:1.55}
+.nota-a{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* ── CONSENTIMIENTOS ── */
+.cr{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.cr:last-child{border-bottom:none}
+.cr-name{font-size:13px}
+.cr-date{font-size:11px;color:var(--muted);margin-top:1px}
+.cs{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500}
+.cs-ok{background:var(--green-l);color:var(--green-t)}
+.cs-pend{background:var(--amber-l);color:var(--amber-t)}
+
+/* ── ACTIONS ── */
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+.btn{padding:7px 14px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--card);font-size:12px;color:var(--text);cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--bg)}
+.btn-p{background:var(--pink);color:#fff;border-color:var(--pink)}
+.btn-p:hover{background:var(--pink-d)}
+.btn-sm{padding:5px 10px;font-size:11px}
+
+/* ── NUEVA SESIÓN FORM ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:var(--card);border-radius:var(--radius) var(--radius) 0 0;padding:1.25rem;width:100%;max-width:680px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:500;margin-bottom:1rem}
+.modal .form-group{margin-bottom:12px}
+.modal .form-group select,.modal .form-group textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;outline:none;font-family:inherit}
+.modal .form-group select:focus,.modal .form-group textarea:focus{border-color:var(--pink)}
+.modal-actions{display:flex;gap:8px;margin-top:1rem}
+.modal-actions .btn{flex:1;text-align:center}
+
+/* ── RESPONSIVO ── */
+@media(max-width:520px){
+  .g2{grid-template-columns:1fr}
+  .ficha-header{flex-wrap:wrap}
+  .next-turn{width:100%;text-align:left;margin-top:6px}
+  .patient-stats{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ LOGIN ══════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="dot"></div>
+      <span>SH Estética</span>
+    </div>
+    <div id="login-error" class="login-error hidden"></div>
+    <div class="login-tabs">
+      <div class="login-tab on" onclick="switchLoginTab('staff')">Equipo</div>
+      <div class="login-tab" onclick="switchLoginTab('patient')">Soy paciente</div>
+    </div>
+
+    <div id="tab-staff">
+      <div class="form-group">
+        <label>Usuario</label>
+        <input type="text" id="staff-user" placeholder="sofia" />
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="staff-pass" placeholder="••••••••" />
+        <div class="form-hint">Demo: usuario <strong>sofia</strong> / contraseña <strong>1234</strong></div>
+      </div>
+      <button class="btn-login" onclick="loginStaff()">Ingresar</button>
+    </div>
+
+    <div id="tab-patient" class="hidden">
+      <div class="form-group">
+        <label>Tu ID de paciente</label>
+        <input type="text" id="patient-id" placeholder="PAC001" style="text-transform:uppercase" />
+        <div class="form-hint">Tu médica te entregó un ID al registrarte (ej: PAC042)</div>
+      </div>
+      <button class="btn-login" onclick="loginPatient()">Ver mi progreso</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ APP PRINCIPAL (SOFÍA) ══════════════════ -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo"><div class="dot"></div>SH Estética</div>
+    <div class="topbar-right">
+      <span class="user-pill" id="user-label"></span>
+      <button class="btn-logout" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- LISTA DE PACIENTES -->
+    <div id="view-list">
+      <div class="search-bar">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="var(--muted)" stroke-width="1.5"/><path d="M10 10l4 4" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input type="text" id="search-input" placeholder="Buscar por nombre, ID o tratamiento..." oninput="renderList()" />
+      </div>
+      <div class="patient-list" id="patient-list"></div>
+      <button class="btn-new" onclick="alert('En la versión conectada a Google Sheets, acá abrirías el formulario de nuevo paciente vinculado a n8n.')">+ Nuevo paciente</button>
+    </div>
+
+    <!-- FICHA INDIVIDUAL -->
+    <div id="view-ficha" class="hidden">
+      <button class="card-back" onclick="showList()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7l5 5" stroke="var(--pink)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Volver a pacientes
+      </button>
+      <div id="ficha-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ VISTA PACIENTE ══════════════════ -->
+<div id="patient-view" class="hidden">
+  <div class="topbar">
+    <div class="topbar-logo"><div class="dot"></div>SH Estética — mi progreso</div>
+    <div class="topbar-right">
+      <button class="btn-logout" onclick="logout()">Salir</button>
+    </div>
+  </div>
+  <div class="main" id="patient-content"></div>
+</div>
+
+<!-- MODAL NUEVA SESIÓN -->
+<div id="modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">Registrar nueva sesión</div>
+    <div class="form-group">
+      <label>Tratamiento</label>
+      <select id="m-trat">
+        <option>Relleno labial (AH 1ml)</option>
+        <option>Toxina botulínica (frente+entrecejo)</option>
+        <option>Relleno surcos nasogenianos</option>
+        <option>Mesoterapia facial</option>
+        <option>Hilo tensor PDO</option>
+        <option>Plasma rico en plaquetas (PRP)</option>
+        <option>Botox mentón y cuello</option>
+        <option>Relleno ojeras (tear trough)</option>
+        <option>Hidratación profunda</option>
+        <option>Otro tratamiento</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Canal</label>
+      <select id="m-canal">
+        <option>Boca en boca</option>
+        <option>Instagram/Publicidad</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Modalidad</label>
+      <select id="m-modal">
+        <option>Única</option>
+        <option>+Control</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Precio cobrado (ARS)</label>
+      <input type="number" id="m-precio" placeholder="85000" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;outline:none" />
+    </div>
+    <div class="form-group">
+      <label>Nota clínica (opcional)</label>
+      <textarea id="m-nota" rows="3" placeholder="Observaciones post-sesión..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-p" onclick="saveSession()">Guardar sesión</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATOS DE EJEMPLO ────────────────────────────────────────────────────────
+const PATIENTS = [
+  {
+    id:"PAC042", nombre:"María Laura González", apellido:"González", nombre_corto:"María Laura",
+    edad:34, plaza:"Tucumán", canal:"Instagram", initials:"ML",
+    tel:"+54 381 555-0192", email:"mlaura@gmail.com", nacimiento:"12/03/1991",
+    primera:"03/11/2024", pack_activo:"Relleno labial",
+    alergias:"Lidocaína inyectable", medicacion:"Anticonceptivos orales",
+    afecciones:"Ninguna conocida", embarazo:"No",
+    proximo_turno:"15 Jul 2025", proximo_hora:"10:30 hs",
+    sesiones:[
+      {trat:"Relleno labial (AH 1ml)",fecha:"28/06/2025",sesion:"2/2",plaza:"Tucumán",canal:"Boca en boca",nota:"Cánula 25G, 0.8ml AH. Resultado excelente.",precio:"$85.000",margen:"62%",color:"#D4537E"},
+      {trat:"Toxina botulínica (frente+entrecejo)",fecha:"10/05/2025",sesion:"única",plaza:"Tucumán",canal:"Instagram",nota:"20U frente, 10U entrecejo. Sin complicaciones.",precio:"$120.000",margen:"71%",color:"#1D9E75"},
+      {trat:"Relleno labial (AH 1ml)",fecha:"14/03/2025",sesion:"1/2",plaza:"Tucumán",canal:"Instagram",nota:"Anestésico tópico únicamente por alergia a lidocaína.",precio:"$85.000",margen:"62%",color:"#1D9E75"},
+    ],
+    notas:[
+      {fecha:"28/06/2025",texto:"Pide turno para toxina en 3 meses. Recordar no usar lidocaína inyectable.",autor:"Sofía M."},
+      {fecha:"10/05/2025",texto:"Sin reacciones adversas. Recomienda la clínica a una amiga (PAC043).",autor:"Sofía M."},
+    ],
+    consentimientos:[
+      {nombre:"Relleno con ácido hialurónico",fecha:"14/03/2025",estado:"Firmado"},
+      {nombre:"Toxina botulínica",fecha:"10/05/2025",estado:"Firmado"},
+      {nombre:"Mesoterapia facial",fecha:"—",estado:"Pendiente"},
+    ],
+    fotos:[
+      {tipo:"Antes",fecha:"Mar 2025",bg:"#F4C0D1",fill:"#ED93B1",circle:"#D4537E",tagBg:"#E6F1FB",tagC:"#0C447C"},
+      {tipo:"Después",fecha:"Jun 2025",bg:"#9FE1CB",fill:"#5DCAA5",circle:"#1D9E75",tagBg:"#E1F5EE",tagC:"#085041"},
+    ]
+  },
+  {
+    id:"PAC043", nombre:"Valentina Ramos", apellido:"Ramos", nombre_corto:"Valentina",
+    edad:28, plaza:"Buenos Aires", canal:"Boca en boca", initials:"VR",
+    tel:"+54 11 555-0341", email:"vale.ramos@gmail.com", nacimiento:"07/09/1996",
+    primera:"15/01/2025", pack_activo:"Mesoterapia facial",
+    alergias:"Ninguna conocida", medicacion:"Ninguna",
+    afecciones:"Ninguna conocida", embarazo:"No",
+    proximo_turno:"22 Jul 2025", proximo_hora:"15:00 hs",
+    sesiones:[
+      {trat:"Mesoterapia facial",fecha:"15/06/2025",sesion:"3/4",plaza:"Buenos Aires",canal:"Boca en boca",nota:"Aplicación uniforme. Excelente tolerancia.",precio:"$95.000",margen:"68%",color:"#D4537E"},
+      {trat:"Mesoterapia facial",fecha:"20/04/2025",sesion:"2/4",plaza:"Buenos Aires",canal:"Boca en boca",nota:"Sin reacciones. Piel más luminosa.",precio:"$95.000",margen:"68%",color:"#1D9E75"},
+      {trat:"Mesoterapia facial",fecha:"15/02/2025",sesion:"1/4",plaza:"Buenos Aires",canal:"Boca en boca",nota:"Primera sesión. Paciente muy nerviosa pero tolera bien.",precio:"$95.000",margen:"68%",color:"#1D9E75"},
+    ],
+    notas:[
+      {fecha:"15/06/2025",texto:"Gran progreso. Cuarta sesión agendada para julio.",autor:"Sofía M."},
+    ],
+    consentimientos:[
+      {nombre:"Mesoterapia facial",fecha:"15/02/2025",estado:"Firmado"},
+    ],
+    fotos:[
+      {tipo:"Antes",fecha:"Feb 2025",bg:"#F5C4B3",fill:"#F0997B",circle:"#D85A30",tagBg:"#E6F1FB",tagC:"#0C447C"},
+      {tipo:"Después",fecha:"Jun 2025",bg:"#B5D4F4",fill:"#85B7EB",circle:"#378ADD",tagBg:"#E1F5EE",tagC:"#085041"},
+    ]
+  },
+  {
+    id:"PAC044", nombre:"Camila Suárez", apellido:"Suárez", nombre_corto:"Camila",
+    edad:41, plaza:"Tucumán", canal:"Instagram", initials:"CS",
+    tel:"+54 381 555-0788", email:"cami.suarez@outlook.com", nacimiento:"22/11/1983",
+    primera:"28/02/2025", pack_activo:"Hilo tensor PDO",
+    alergias:"Penicilina", medicacion:"Tiroxina 50mcg",
+    afecciones:"Hipotiroidismo (controlado)", embarazo:"No",
+    proximo_turno:"18 Jul 2025", proximo_hora:"09:00 hs",
+    sesiones:[
+      {trat:"Hilo tensor PDO",fecha:"28/05/2025",sesion:"única",plaza:"Tucumán",canal:"Instagram",nota:"12 hilos zona malar y mandíbula. Resultado inmediato.",precio:"$180.000",margen:"74%",color:"#D4537E"},
+      {trat:"Toxina botulínica (frente+entrecejo)",fecha:"28/02/2025",sesion:"única",plaza:"Tucumán",canal:"Instagram",nota:"Dosis conservadora por primera vez.",precio:"$120.000",margen:"71%",color:"#1D9E75"},
+    ],
+    notas:[
+      {fecha:"28/05/2025",texto:"Resultado muy marcado. Paciente encantada. Recomienda control en 6 meses.",autor:"Sofía M."},
+    ],
+    consentimientos:[
+      {nombre:"Hilo tensor PDO",fecha:"28/05/2025",estado:"Firmado"},
+      {nombre:"Toxina botulínica",fecha:"28/02/2025",estado:"Firmado"},
+    ],
+    fotos:[
+      {tipo:"Antes",fecha:"Feb 2025",bg:"#CECBF6",fill:"#AFA9EC",circle:"#7F77DD",tagBg:"#E6F1FB",tagC:"#0C447C"},
+    ]
+  }
+];
+
+let currentPatient = null;
+let currentTab = "datos";
+let currentRole = null;
+
+// ── AUTH ─────────────────────────────────────────────────────────────────────
+function switchLoginTab(tab) {
+  document.querySelectorAll('.login-tab').forEach((t,i)=>{t.classList.toggle('on', (tab==='staff'&&i===0)||(tab==='patient'&&i===1))});
+  document.getElementById('tab-staff').classList.toggle('hidden', tab!=='staff');
+  document.getElementById('tab-patient').classList.toggle('hidden', tab!=='patient');
+  document.getElementById('login-error').classList.add('hidden');
+}
+
+function showError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+function loginStaff() {
+  const u = document.getElementById('staff-user').value.trim().toLowerCase();
+  const p = document.getElementById('staff-pass').value;
+  if((u==='sofia'||u==='admin'||u==='martin') && p==='1234') {
+    currentRole = 'staff';
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-label').textContent = u.charAt(0).toUpperCase()+u.slice(1);
+    renderList();
+  } else {
+    showError('Usuario o contraseña incorrectos. Demo: sofia / 1234');
+  }
+}
+
+function loginPatient() {
+  const id = document.getElementById('patient-id').value.trim().toUpperCase();
+  const pat = PATIENTS.find(p=>p.id===id);
+  if(pat) {
+    currentRole = 'patient';
+    currentPatient = pat;
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('patient-view').classList.remove('hidden');
+    renderPatientView(pat);
+  } else {
+    showError('ID no encontrado. Probá con PAC042, PAC043 o PAC044');
+  }
+}
+
+function logout() {
+  currentRole = null; currentPatient = null;
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('patient-view').classList.add('hidden');
+  document.getElementById('staff-user').value='';
+  document.getElementById('staff-pass').value='';
+  document.getElementById('patient-id').value='';
+  document.getElementById('login-error').classList.add('hidden');
+}
+
+// ── LISTA ────────────────────────────────────────────────────────────────────
+function renderList() {
+  const q = (document.getElementById('search-input').value||'').toLowerCase();
+  const filtered = PATIENTS.filter(p=>
+    p.nombre.toLowerCase().includes(q)||
+    p.id.toLowerCase().includes(q)||
+    (p.pack_activo||'').toLowerCase().includes(q)
+  );
+  const el = document.getElementById('patient-list');
+  el.innerHTML = filtered.map(p=>`
+    <div class="patient-item" onclick="showFicha('${p.id}')">
+      <div class="pat-avatar">${p.initials}</div>
+      <div style="flex:1">
+        <div class="pat-name">${p.nombre}</div>
+        <div class="pat-sub">${p.id} · ${p.edad} años · ${p.plaza}</div>
+        <div class="pat-badges">
+          <span class="badge b-pink">${p.canal}</span>
+          <span class="badge b-teal">${p.sesiones.length} sesiones</span>
+          ${p.pack_activo?`<span class="badge b-amber">${p.pack_activo}</span>`:''}
+          ${p.alergias&&p.alergias!=='Ninguna conocida'?`<span class="badge" style="background:var(--red-l);color:var(--red-t)">Alergia</span>`:''}
+        </div>
+      </div>
+      <div class="pat-right">
+        <div class="pat-date">Próx: ${p.proximo_turno}</div>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="margin-top:6px"><path d="M5 2l5 5-5 5" stroke="var(--hint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── FICHA ────────────────────────────────────────────────────────────────────
+function showList() {
+  document.getElementById('view-list').classList.remove('hidden');
+  document.getElementById('view-ficha').classList.add('hidden');
+}
+
+function showFicha(id) {
+  currentPatient = PATIENTS.find(p=>p.id===id);
+  currentTab = 'datos';
+  document.getElementById('view-list').classList.add('hidden');
+  document.getElementById('view-ficha').classList.remove('hidden');
+  renderFicha();
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  renderFicha();
+}
+
+function renderFicha() {
+  const p = currentPatient;
+  const tabs = ['datos','historial','fotos','notas','consentimientos'];
+  const tabLabels = ['Datos','Historial','Fotos','Notas','Consentimientos'];
+
+  const alertaHtml = p.alergias && p.alergias!=='Ninguna conocida'
+    ? `<div class="alerta"><div class="alerta-dot"></div><span>Alergia a ${p.alergias} — verificar antes de cada sesión</span></div>`
+    : '';
+
+  const tabsHtml = tabs.map((t,i)=>`<button class="tab ${currentTab===t?'on':''}" onclick="switchTab('${t}')">${tabLabels[i]}</button>`).join('');
+
+  let contentHtml = '';
+  if(currentTab==='datos') {
+    contentHtml = `
+      <div class="sec">Información personal</div>
+      <div class="g2">
+        <div class="f"><div class="fl">Teléfono / WhatsApp</div><div class="fv">${p.tel}</div></div>
+        <div class="f"><div class="fl">Email</div><div class="fv">${p.email}</div></div>
+        <div class="f"><div class="fl">Fecha de nacimiento</div><div class="fv">${p.nacimiento}</div></div>
+        <div class="f"><div class="fl">Primera consulta</div><div class="fv">${p.primera}</div></div>
+        <div class="f"><div class="fl">Plaza habitual</div><div class="fv">${p.plaza}</div></div>
+        <div class="f"><div class="fl">Canal de origen</div><div class="fv">${p.canal}</div></div>
+      </div>
+      <div class="sec">Antecedentes médicos</div>
+      <div class="g2">
+        <div class="f"><div class="fl">Alergias</div><div class="fv ${p.alergias!=='Ninguna conocida'?'red':''}">${p.alergias}</div></div>
+        <div class="f"><div class="fl">Medicación actual</div><div class="fv">${p.medicacion}</div></div>
+        <div class="f"><div class="fl">Afecciones</div><div class="fv">${p.afecciones}</div></div>
+        <div class="f"><div class="fl">Embarazo / lactancia</div><div class="fv">${p.embarazo}</div></div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-p" onclick="openModal()">+ Nueva sesión</button>
+        <button class="btn" onclick="alert('En la versión conectada: edición directa en Google Sheets vía n8n.')">Editar ficha</button>
+        <button class="btn" onclick="alert('Funcionalidad de recordatorio WhatsApp via n8n — próxima iteración.')">Enviar recordatorio</button>
+      </div>
+    `;
+  } else if(currentTab==='historial') {
+    contentHtml = p.sesiones.map(s=>`
+      <div class="ses">
+        <div class="ses-dot" style="background:${s.color}"></div>
+        <div style="flex:1">
+          <div class="ses-trat">${s.trat}</div>
+          <div class="ses-meta">${s.fecha} · Sesión ${s.sesion} · ${s.plaza} · ${s.canal}</div>
+          <div class="ses-note">"${s.nota}"</div>
+        </div>
+        <div class="ses-right">
+          <div class="ses-price">${s.precio}</div>
+          <div class="ses-margin">Margen: ${s.margen}</div>
+        </div>
+      </div>
+    `).join('');
+    contentHtml += `<div class="actions"><button class="btn btn-p" onclick="openModal()">+ Nueva sesión</button></div>`;
+  } else if(currentTab==='fotos') {
+    const fotosHtml = p.fotos.map(f=>`
+      <div class="fbox" style="background:${f.bg}">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="2" y="5" width="24" height="18" rx="3" fill="${f.fill}"/><circle cx="14" cy="14" r="5" fill="${f.circle}"/></svg>
+        <span class="ftag" style="background:${f.tagBg};color:${f.tagC}">${f.tipo} · ${f.fecha}</span>
+      </div>
+    `).join('');
+    contentHtml = `
+      <div class="fotos">
+        ${fotosHtml}
+        <div class="fbox add" onclick="alert('En la versión conectada: subís la foto y se guarda en Google Drive vinculada a la ficha.')">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style="opacity:.4"><rect x="2" y="4" width="16" height="13" rx="2" stroke="#888" stroke-width="1.5"/><circle cx="10" cy="10" r="3" stroke="#888" stroke-width="1.5"/><path d="M10 7V4M7 4h6" stroke="#888" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <div style="font-size:11px;color:var(--hint);margin-top:5px">Agregar foto</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px">Las fotos se almacenan en Google Drive, vinculadas a esta ficha. Solo el equipo puede verlas.</div>
+    `;
+  } else if(currentTab==='notas') {
+    contentHtml = p.notas.map(n=>`
+      <div class="nota">
+        <div class="nota-d">${n.fecha}</div>
+        <div class="nota-t">${n.texto}</div>
+        <div class="nota-a">— ${n.autor}</div>
+      </div>
+    `).join('');
+    contentHtml += `
+      <div style="margin-top:10px">
+        <textarea id="nueva-nota" rows="3" placeholder="Escribí una nota clínica..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;outline:none;font-family:inherit;resize:vertical"></textarea>
+        <button class="btn btn-p btn-sm" style="margin-top:6px" onclick="addNota()">Guardar nota</button>
+      </div>
+    `;
+  } else if(currentTab==='consentimientos') {
+    contentHtml = p.consentimientos.map(c=>`
+      <div class="cr">
+        <div>
+          <div class="cr-name">${c.nombre}</div>
+          <div class="cr-date">${c.estado==='Firmado'?'Firmado el '+c.fecha:'Pendiente de firma'}</div>
+        </div>
+        <span class="cs ${c.estado==='Firmado'?'cs-ok':'cs-pend'}">${c.estado}</span>
+      </div>
+    `).join('');
+    contentHtml += `<div class="actions"><button class="btn" onclick="alert('En la versión conectada: enviás el consentimiento por WhatsApp y el paciente firma digitalmente.')">+ Enviar consentimiento</button></div>`;
+  }
+
+  document.getElementById('ficha-content').innerHTML = `
+    <div class="card">
+      <div class="ficha-header">
+        <div class="avatar-lg">${p.initials}</div>
+        <div style="flex:1">
+          <div class="ficha-name">${p.nombre}</div>
+          <div class="ficha-sub">${p.id} · ${p.edad} años · ${p.plaza}</div>
+          <div class="ficha-badges">
+            <span class="badge b-pink">${p.canal}</span>
+            <span class="badge b-teal">${p.sesiones.length} sesiones</span>
+            ${p.pack_activo?`<span class="badge b-amber">Pack: ${p.pack_activo}</span>`:''}
+          </div>
+        </div>
+        <div class="next-turn">
+          <div class="next-turn-label">Próximo turno</div>
+          <div class="next-turn-date">${p.proximo_turno}</div>
+          <div class="next-turn-time">${p.proximo_hora}</div>
+        </div>
+      </div>
+      ${alertaHtml}
+      <div class="tabs">${tabsHtml}</div>
+      ${contentHtml}
+    </div>
+  `;
+}
+
+function addNota() {
+  const txt = document.getElementById('nueva-nota').value.trim();
+  if(!txt) return;
+  const today = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  currentPatient.notas.unshift({fecha:today,texto:txt,autor:'Sofía M.'});
+  renderFicha();
+}
+
+// ── MODAL NUEVA SESIÓN ───────────────────────────────────────────────────────
+function openModal() {
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal() {
+  document.getElementById('modal').classList.add('hidden');
+}
+function saveSession() {
+  const trat = document.getElementById('m-trat').value;
+  const canal = document.getElementById('m-canal').value;
+  const nota = document.getElementById('m-nota').value || 'Sin observaciones.';
+  const precio = document.getElementById('m-precio').value;
+  const today = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  currentPatient.sesiones.unshift({
+    trat, fecha:today, sesion:'nueva', plaza:currentPatient.plaza,
+    canal, nota, precio:precio?'$'+Number(precio).toLocaleString('es-AR'):'—',
+    margen:'—', color:'#D4537E'
+  });
+  closeModal();
+  currentTab = 'historial';
+  renderFicha();
+  document.getElementById('m-nota').value='';
+  document.getElementById('m-precio').value='';
+}
+
+// ── VISTA PACIENTE ───────────────────────────────────────────────────────────
+function renderPatientView(p) {
+  const totalARS = p.sesiones.reduce((acc,s)=>{
+    const n = parseInt((s.precio||'').replace(/\D/g,''));
+    return acc+(n||0);
+  },0);
+
+  document.getElementById('patient-content').innerHTML = `
+    <div class="patient-hero">
+      <div class="patient-hero-name">Hola, ${p.nombre_corto}</div>
+      <div class="patient-hero-sub">${p.id} · Tu historial en SH Estética</div>
+      <div class="patient-stats">
+        <div class="pstat"><div class="pstat-n">${p.sesiones.length}</div><div class="pstat-l">Sesiones</div></div>
+        <div class="pstat"><div class="pstat-n">${p.fotos.length}</div><div class="pstat-l">Fotos</div></div>
+        <div class="pstat"><div class="pstat-n">${p.consentimientos.filter(c=>c.estado==='Firmado').length}</div><div class="pstat-l">Consent.</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec" style="margin-top:0">Próximo turno</div>
+      <div style="font-size:16px;font-weight:500">${p.proximo_turno} — ${p.proximo_hora}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">Plaza: ${p.plaza}</div>
+    </div>
+
+    <div class="card">
+      <div class="sec" style="margin-top:0">Mis tratamientos</div>
+      ${p.sesiones.map(s=>`
+        <div class="ses">
+          <div class="ses-dot" style="background:${s.color}"></div>
+          <div style="flex:1">
+            <div class="ses-trat">${s.trat}</div>
+            <div class="ses-meta">${s.fecha} · Sesión ${s.sesion} · ${s.plaza}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="card">
+      <div class="sec" style="margin-top:0">Mis fotos — progreso</div>
+      <div class="fotos">
+        ${p.fotos.map(f=>`
+          <div class="fbox" style="background:${f.bg}">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="2" y="5" width="24" height="18" rx="3" fill="${f.fill}"/><circle cx="14" cy="14" r="5" fill="${f.circle}"/></svg>
+            <span class="ftag" style="background:${f.tagBg};color:${f.tagC}">${f.tipo} · ${f.fecha}</span>
+          </div>
+        `).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px">Las fotos son privadas y solo las ves vos y tu médica.</div>
+    </div>
+
+    <div class="card">
+      <div class="sec" style="margin-top:0">Consentimientos</div>
+      ${p.consentimientos.map(c=>`
+        <div class="cr">
+          <div><div class="cr-name">${c.nombre}</div><div class="cr-date">${c.estado==='Firmado'?'Firmado el '+c.fecha:'Pendiente'}</div></div>
+          <span class="cs ${c.estado==='Firmado'?'cs-ok':'cs-pend'}">${c.estado}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    <div style="font-size:11px;color:var(--muted);text-align:center;padding:1rem 0">
+      ¿Consultas? Escribinos por WhatsApp.
+    </div>
+  `;
+}
+
+// Enter en login
+document.getElementById('staff-pass').addEventListener('keydown',e=>{if(e.key==='Enter')loginStaff()});
+document.getElementById('patient-id').addEventListener('keydown',e=>{if(e.key==='Enter')loginPatient()});
+document.getElementById('patient-id').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase()});
+</script>
+</body>
+</html>
